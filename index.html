@@ -144,15 +144,15 @@ input:focus-visible{border-radius:14px}
       <div class="serif big" id="yes1">&lt;3</div>
       <div class="serif big uu" id="yes2" aria-label="uuuuu"></div>
       <div id="yes3">
-        <p class="serif line" style="margin:0 auto">Thank you for saying yes.</p>
-        <p class="sub" style="margin-inline:auto">I promise to make every ordinary day a little softer and a little brighter, with you beside me.</p>
+        <p class="serif line" style="margin:0 auto">Dhonnobad, 'yes' bolar jonno. ❤️</p>
+        <p class="sub" style="margin-inline:auto">Ami promise kori, tomar sathe proti ta din ektu beshi shundor, ektu beshi shanto korbo. Tumi thakle shob kisu onek bhalo lage amar.</p>
       </div>
     </div>
   </section>
 
   <section class="screen" id="s-no">
-    <p class="serif line">Thank you for being honest. ❤️</p>
-    <p class="sub">That took courage, and it means a lot to me. Whatever happens, I am grateful you took the time to read this.</p>
+    <p class="serif line">Honest thakar jonno thanks. ❤️</p>
+    <p class="sub">Eta bola tomar jonno shohoj chilo na, ami bujhi. Tumi jai bolo, tomar prati amar sommaan ager moto-i thakbe. Shomoy diye shob ta dekhar jonno dhonnobad.</p>
   </section>
 </main>
 
@@ -238,13 +238,15 @@ const $ = s => document.querySelector(s);
 const reduceMotion = matchMedia("(prefers-reduced-motion:reduce)").matches;
 const INTRO_LINES = [
   "Hey, Senior...",
-  "I have been meaning to tell you something.",
-  "It has been sitting quietly in my heart for a while.",
-  "So I made this for you."
+  "Ekta kotha bolbo bole onek din dhore bhabchilam.",
+  "Ami jani, tumi amake ei bhabe chao na... hoyto bhalo-o basho na.",
+  "Tarpor-o kotha ta mone chepe rakhte parlam na.",
+  "Tai tomar jonno choto ekta kisu baniyechi.",
+  "Jodi 'na' bolo, kono problem nai. Ami bujhbo. ❤️"
 ];
 const NO_STEPS = {
   noScale:[1,.84,.7,.58], yesScale:[1,1.12,1.25,1.38],
-  messages:["Please Lamha... accept kora jaina? 🥺","Please no diyo na... 🥺","Tmk vlo lagce amar onak,\nvishon valo lagce. ❤️","Whatever you choose, I will understand.\nPlease answer honestly. ❤️"]
+  messages:["Please Lamha... accept kora jaina? 🥺","Please no diyo na... 🥺","Tmk vlo lagce amar onak,\nvishon valo lagce. ❤️","Kono mote ki amar hoya jaina? 🥺","Tumi jai bolo, ami bujhbo.\nShotti ta-i bolo. ❤️"]
 };
 let noClicks = 0, current = null, finished = false;
 
@@ -257,6 +259,20 @@ function show(el){
   setTimeout(()=>{ const b=el.querySelector("button"); if(b&&el.classList.contains("active")) b.focus({preventScroll:true}); },900);
 }
 const wait = ms => new Promise(r=>setTimeout(r,reduceMotion?Math.min(ms,50):ms));
+
+/* Background song: starts on the first click/tap/key anywhere, loops, full volume, no toggle button.
+   Keep the mp3 in the same folder as index.html. (Browsers block autoplay until the first interaction;
+   iOS ignores the volume property and uses the device volume.) */
+const song = new Audio("SaveTik.io_7708364228037479688.mp3");
+song.loop = true; song.volume = 1; song.preload = "auto";
+let songStarted = false;
+function startSong(){
+  if(songStarted) return;
+  const p = song.play();
+  if(p && p.then) p.then(()=>{ songStarted = true; }).catch(()=>{}); /* retried on the next interaction */
+  else songStarted = true;
+}
+["pointerdown","touchend","click","keydown"].forEach(ev=>addEventListener(ev,startSong,{passive:true}));
 
 /* Build intro screens */
 const introScreens = INTRO_LINES.map((text,i)=>{
