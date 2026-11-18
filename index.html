@@ -1,0 +1,416 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#F7F6F0">
+<title>For You</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500&display=swap" rel="stylesheet">
+<style>
+/* ===== 2. CSS VARIABLES ===== */
+:root{
+  --bg:#F7F6F0; --ink:#2F3620; --muted:#6F7660;
+  --olive:#667433; --olive-d:#4B5726; --olive-l:#DDE3C7;
+  --blue:#BCDCEC; --blue-l:#E3F0F7; --blue-d:#7FB3CF;
+  --serif:"Cormorant Garamond",Georgia,"Times New Roman",serif;
+  --sans:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  --ease:cubic-bezier(.2,.7,.2,1); --spring:cubic-bezier(.34,1.56,.64,1);
+}
+/* ===== 3. GLOBAL ===== */
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--ink);font-family:var(--sans);-webkit-tap-highlight-color:transparent}
+button{font:inherit;color:inherit;cursor:pointer;border:0;background:none}
+:focus-visible{outline:2px solid var(--olive);outline-offset:3px;border-radius:999px}
+input:focus-visible{border-radius:14px}
+.bg{position:fixed;inset:0;overflow:hidden;z-index:0;pointer-events:none}
+.blob{position:absolute;border-radius:50%;filter:blur(70px);opacity:.55;will-change:transform}
+.b1{width:60vmax;height:60vmax;left:-20vmax;top:-22vmax;background:var(--olive-l);animation:drift 22s ease-in-out infinite alternate}
+.b2{width:55vmax;height:55vmax;right:-20vmax;bottom:-22vmax;background:var(--blue);animation:drift 26s ease-in-out infinite alternate-reverse}
+@keyframes drift{to{transform:translate(6vmax,4vmax) scale(1.08)}}
+.p{position:absolute;border-radius:50%;background:var(--olive);opacity:0;animation:rise linear infinite}
+.p:nth-child(3n){background:var(--blue-d)}
+@keyframes rise{0%{opacity:0;transform:translateY(0)}20%{opacity:.35}100%{opacity:0;transform:translateY(-35vh)}}
+#hearts{position:fixed;inset:0;z-index:2;pointer-events:none;overflow:hidden}
+.heart{position:absolute;bottom:-40px;color:var(--olive);opacity:0;animation:floatUp linear forwards;will-change:transform}
+.heart.blue{color:var(--blue-d)}
+@keyframes floatUp{0%{opacity:0;transform:translateY(0) scale(.6)}15%{opacity:.8}100%{opacity:0;transform:translateY(-110vh) translateX(var(--sway)) scale(1.1)}}
+
+/* ===== 4. SCREENS ===== */
+#app{position:fixed;inset:0;z-index:1;transition:filter .6s var(--ease),transform .6s var(--ease)}
+#app.blurred{filter:blur(12px);transform:scale(.98)}
+.screen{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;
+  padding:max(24px,env(safe-area-inset-top)) 24px max(24px,env(safe-area-inset-bottom));overflow-y:auto;overflow-x:hidden;
+  opacity:0;visibility:hidden;filter:blur(14px);transform:scale(.97) translateY(12px);
+  transition:opacity .7s var(--ease),filter .7s var(--ease),transform .7s var(--ease),visibility 0s .7s}
+.screen.active{opacity:1;visibility:visible;filter:none;transform:none;transition-delay:.3s,.3s,.3s,0s}
+.screen.leaving{transform:scale(1.03)}
+.serif{font-family:var(--serif);font-weight:500;line-height:1.12;letter-spacing:-.01em}
+.line{font-size:clamp(2rem,8.5vw,3.6rem);max-width:15em;margin-bottom:2.2rem;text-wrap:balance}
+.line em{color:var(--olive)}
+.sub{color:var(--muted);font-size:clamp(.95rem,3.6vw,1.1rem);line-height:1.6;max-width:30em;margin-top:1.2rem}
+.dots{display:flex;gap:8px;margin-top:2.2rem}
+.dots i{width:6px;height:6px;border-radius:50%;background:var(--olive-l);transition:.5s}
+.dots i.on{background:var(--olive);width:20px;border-radius:4px}
+.btn{min-height:52px;padding:0 2.2rem;border-radius:999px;font-size:1.05rem;font-weight:600;letter-spacing:.01em;
+  transition:transform .35s var(--spring),box-shadow .3s,background .3s}
+.btn.primary{background:var(--olive);color:#fff;box-shadow:0 10px 28px -10px rgba(75,87,38,.6),inset 0 1px 0 rgba(255,255,255,.25)}
+.btn.primary:hover{background:var(--olive-d);transform:translateY(-2px)}
+.btn.soft{background:rgba(255,255,255,.55);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border:1px solid rgba(127,179,207,.55);box-shadow:0 8px 24px -14px rgba(47,54,32,.4)}
+.btn.soft:hover{background:rgba(227,240,247,.9)}
+.btn:active{transform:scale(.95)!important}
+
+/* Proposal */
+#q{font-size:clamp(2.1rem,9.5vw,4.2rem);max-width:11em;margin-bottom:2rem;text-wrap:balance}
+.w{display:inline-block;white-space:nowrap}
+.c{display:inline-block;opacity:0;filter:blur(8px);transform:translateY(.35em)}
+#q.play .c{animation:charIn .9s var(--ease) forwards;animation-delay:calc(var(--i)*55ms + .4s)}
+@keyframes charIn{to{opacity:1;filter:none;transform:none}}
+.answers{display:flex;flex-wrap:wrap;justify-content:center;align-items:center;gap:2.6rem 2.8rem;padding:1.4rem .5rem;
+  opacity:0;transform:translateY(14px);pointer-events:none;transition:opacity .9s var(--ease),transform .9s var(--ease)}
+.answers.show{opacity:1;transform:none;pointer-events:auto}
+.answers .btn{min-width:120px;transition:transform .7s var(--spring),box-shadow .3s,background .3s}
+#yesBtn{transform:scale(var(--ys,1))}
+#noBtn{transform:scale(var(--ns,1))}
+#reply{min-height:4.4rem;margin-top:.8rem;font-family:var(--serif);font-size:clamp(1.3rem,5vw,1.8rem);color:var(--olive-d);white-space:pre-line;line-height:1.3;max-width:20em}
+#reply.pop{animation:pop .7s var(--ease)}
+@keyframes pop{from{opacity:0;filter:blur(8px);transform:translateY(10px) scale(.96)}}
+
+/* Yes sequence */
+.big{font-size:clamp(5rem,28vw,11rem);color:var(--olive);text-shadow:0 0 60px rgba(188,220,236,.9)}
+.stage{position:relative;min-height:14rem;width:100%;display:grid;place-items:center}
+.stage>*{grid-area:1/1;opacity:0;filter:blur(18px);transform:scale(.8);transition:opacity 1.1s var(--ease),filter 1.1s var(--ease),transform 1.3s var(--spring)}
+.stage>.in{opacity:1;filter:none;transform:none}
+.uu span{display:inline-block;opacity:0;transform:translateY(.4em) scale(.6)}
+.uu.in span{animation:charIn 1s var(--spring) forwards;animation-delay:calc(var(--i)*140ms)}
+.glow{position:absolute;width:min(70vmin,420px);aspect-ratio:1;border-radius:50%;background:radial-gradient(circle,rgba(188,220,236,.8),transparent 68%);animation:breathe 4s ease-in-out infinite;z-index:-1}
+@keyframes breathe{50%{transform:scale(1.15);opacity:.7}}
+
+/* ===== 5. ADMIN ===== */
+#admin{position:fixed;inset:0;z-index:50;display:none;background:rgba(247,246,240,.72);backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);overflow-y:auto;opacity:0;transition:opacity .5s var(--ease)}
+#admin.open{display:block}#admin.vis{opacity:1}
+.adm{max-width:980px;margin:0 auto;padding:max(20px,env(safe-area-inset-top)) 18px 40px}
+.adm-top{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:18px}
+.adm-top h2{font-family:var(--serif);font-size:clamp(1.7rem,6vw,2.4rem);font-weight:600}
+.mini{min-height:40px;padding:0 1.1rem;border-radius:999px;font-size:.9rem;font-weight:600;background:rgba(255,255,255,.7);border:1px solid rgba(127,179,207,.6);transition:.25s}
+.mini:hover,.mini.on{background:var(--olive);color:#fff;border-color:var(--olive)}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px}
+.stat{background:rgba(255,255,255,.65);border:1px solid rgba(188,220,236,.9);border-radius:20px;padding:16px;box-shadow:0 12px 30px -22px rgba(47,54,32,.5)}
+.stat b{display:block;font-family:var(--serif);font-size:2.3rem;color:var(--olive-d);line-height:1}
+.stat span{font-size:.8rem;color:var(--muted)}
+.stat.wide{grid-column:1/-1}.stat.wide b{font-size:1.2rem;font-family:var(--sans)}
+.bar{display:flex;height:10px;border-radius:6px;overflow:hidden;background:var(--blue-l);margin-top:10px}
+.bar i{display:block;height:100%;transition:width .8s var(--ease)}
+.bar .y{background:var(--olive)}.bar .n{background:var(--blue-d)}
+.tools{display:flex;flex-wrap:wrap;gap:10px;margin:20px 0 14px;align-items:center}
+.tools input{flex:1 1 180px;min-height:40px;padding:0 14px;border-radius:14px;border:1px solid rgba(127,179,207,.6);background:rgba(255,255,255,.75);font:inherit;color:var(--ink)}
+.list{display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));gap:12px}
+.row{background:rgba(255,255,255,.7);border:1px solid rgba(188,220,236,.9);border-radius:18px;padding:14px 16px;font-size:.85rem;color:var(--muted);line-height:1.6;word-break:break-word}
+.row strong{font-size:1rem;color:var(--ink)}
+.tag{display:inline-block;padding:2px 12px;border-radius:999px;font-weight:700;font-size:.8rem;margin-right:6px}
+.tag.yes{background:var(--olive);color:#fff}.tag.no{background:var(--blue);color:var(--ink)}.tag.pending{background:var(--olive-l);color:var(--olive-d)}
+.empty{grid-column:1/-1;text-align:center;padding:30px;color:var(--muted)}
+
+/* ===== REDUCED MOTION ===== */
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation-duration:.01ms!important;animation-delay:0s!important;animation-iteration-count:1!important;transition-duration:.01ms!important;transition-delay:0s!important}
+  .blob,.p,#hearts{display:none}
+  .screen{filter:none!important}
+}
+</style>
+</head>
+<body>
+
+<!-- ===== 1. HTML STRUCTURE ===== -->
+<div class="bg" aria-hidden="true"><i class="blob b1"></i><i class="blob b2"></i><div id="particles"></div></div>
+<div id="hearts" aria-hidden="true"></div>
+
+<main id="app">
+  <!-- Intro screens are generated from INTRO_LINES (see script) -->
+
+  <section class="screen" id="s-ask" aria-labelledby="q">
+    <h1 id="q" class="serif" aria-label="Will you be my life partner?"></h1>
+    <div class="answers" id="answers">
+      <button class="btn primary" id="yesBtn" type="button">Yes</button>
+      <button class="btn soft" id="noBtn" type="button">No</button>
+    </div>
+    <p id="reply" aria-live="polite"></p>
+  </section>
+
+  <section class="screen" id="s-yes" aria-live="polite">
+    <div class="glow" aria-hidden="true"></div>
+    <div class="stage">
+      <div class="serif big" id="yes1">&lt;3</div>
+      <div class="serif big uu" id="yes2" aria-label="uuuuu"></div>
+      <div id="yes3">
+        <p class="serif line" style="margin:0 auto">Thank you for saying yes.</p>
+        <p class="sub" style="margin-inline:auto">I promise to make every ordinary day a little softer and a little brighter, with you beside me.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="screen" id="s-no">
+    <p class="serif line">Thank you for being honest. ❤️</p>
+    <p class="sub">That took courage, and it means a lot to me. Whatever happens, I am grateful you took the time to read this.</p>
+  </section>
+</main>
+
+<!-- Hidden admin dashboard: opens with P pressed twice quickly -->
+<aside id="admin" role="dialog" aria-modal="true" aria-label="Response dashboard">
+  <div class="adm">
+    <div class="adm-top">
+      <h2>Responses</h2>
+      <div style="display:flex;gap:8px">
+        <button class="mini" id="admRefresh" type="button">Refresh</button>
+        <button class="mini" id="admClose" type="button" aria-label="Close dashboard">Close</button>
+      </div>
+    </div>
+    <div class="stats">
+      <div class="stat"><b id="stTotal">0</b><span>Total responses</span></div>
+      <div class="stat"><b id="stYes">0</b><span>Yes</span></div>
+      <div class="stat"><b id="stNo">0</b><span>No</span></div>
+      <div class="stat"><b id="stClicks">0</b><span>Total No clicks</span></div>
+      <div class="stat wide"><span>Latest response</span><b id="stLatest">None yet</b>
+        <div class="bar" aria-hidden="true"><i class="y" id="barY" style="width:0"></i><i class="n" id="barN" style="width:0"></i></div></div>
+    </div>
+    <div class="tools">
+      <input id="admSearch" type="search" placeholder="Search session, device, answer" aria-label="Search responses">
+      <button class="mini on" data-f="all" type="button">All</button>
+      <button class="mini" data-f="yes" type="button">Yes</button>
+      <button class="mini" data-f="no" type="button">No</button>
+      <button class="mini" id="admSort" type="button">Latest first</button>
+    </div>
+    <div class="list" id="admList"></div>
+  </div>
+</aside>
+
+<script type="module">
+/* ===== 6. FIREBASE INITIALIZATION ===== */
+const firebaseConfig = {
+  apiKey: "AIzaSyCXLAfJldSGWOMGJoPTR4dmm4v2f39XOHs",
+  authDomain: "waisuuu.firebaseapp.com",
+  databaseURL: "https://waisuuu-default-rtdb.firebaseio.com",
+  projectId: "waisuuu",
+  storageBucket: "waisuuu.firebasestorage.app",
+  messagingSenderId: "698109897300",
+  appId: "1:698109897300:web:1107e64ec41fd3746f1bc1",
+  measurementId: "G-T886G4K0B9"
+};
+const FB = "https://www.gstatic.com/firebasejs/10.12.2/";
+let db = null, dbApi = null;
+try{
+  const [{initializeApp},rtdb] = await Promise.all([import(FB+"firebase-app.js"),import(FB+"firebase-database.js")]);
+  db = rtdb.getDatabase(initializeApp(firebaseConfig));
+  dbApi = rtdb;
+}catch(err){ console.warn("Firebase unavailable; the experience still works offline.",err); }
+
+/* ===== 7. DATABASE FUNCTIONS =====
+   SECURITY: hiding the dashboard with JavaScript is NOT security. Protect data with Realtime Database rules, e.g.:
+   {
+     "rules": { "responses": {
+       ".read": "auth != null && auth.token.admin === true",   // only a verified admin can read
+       "$sid": {
+         ".write": "!data.exists() || data.child('answer').val() === 'pending'", // public may submit; final answers are locked
+         ".validate": "newData.hasChildren(['answer','sessionId','noClicks'])
+            && newData.child('answer').val().matches(/^(pending|yes|no)$/)
+            && newData.child('noClicks').isNumber()"
+       } } }
+   }
+   TODO (production): add Firebase Authentication for the admin (e.g. signInWithEmailAndPassword in openAdmin()
+   before subscribing) and give that user the admin claim. Public visitors stay login-free.
+   With the read rule above, the dashboard shows data only after that admin sign-in is added. */
+const sessionId = (crypto.randomUUID ? crypto.randomUUID() : String(Date.now())+Math.random().toString(36).slice(2));
+async function saveResponse(patch){
+  if(!db) return;
+  try{
+    await dbApi.update(dbApi.ref(db,"responses/"+sessionId),{
+      sessionId, ...patch,
+      timestamp: dbApi.serverTimestamp(),
+      userAgent: navigator.userAgent.slice(0,140),
+      screenWidth: innerWidth, screenHeight: innerHeight
+    });
+  }catch(err){ console.warn("Save failed",err); }
+}
+
+/* ===== 8. PROPOSAL STATE ===== */
+const $ = s => document.querySelector(s);
+const reduceMotion = matchMedia("(prefers-reduced-motion:reduce)").matches;
+const INTRO_LINES = [
+  "Hey, Senior...",
+  "I have been meaning to tell you something.",
+  "It has been sitting quietly in my heart for a while.",
+  "So I made this for you."
+];
+const NO_STEPS = {
+  noScale:[1,.84,.7,.58], yesScale:[1,1.12,1.25,1.38],
+  messages:["Please Lamha... accept kora jaina? 🥺","Please no diyo na... 🥺","Tmk vlo lagce amar onak,\nvishon valo lagce. ❤️","Whatever you choose, I will understand.\nPlease answer honestly. ❤️"]
+};
+let noClicks = 0, current = null, finished = false;
+
+/* Screen switching: blur + scale cross-fade */
+function show(el){
+  if(current===el) return;
+  const prev=current; current=el;
+  if(prev){ prev.classList.remove("active"); prev.classList.add("leaving"); setTimeout(()=>prev.classList.remove("leaving"),750); }
+  el.classList.add("active");
+  setTimeout(()=>{ const b=el.querySelector("button"); if(b&&el.classList.contains("active")) b.focus({preventScroll:true}); },900);
+}
+const wait = ms => new Promise(r=>setTimeout(r,reduceMotion?Math.min(ms,50):ms));
+
+/* Build intro screens */
+const introScreens = INTRO_LINES.map((text,i)=>{
+  const s=document.createElement("section"); s.className="screen";
+  const p=document.createElement("p"); p.className="serif line"; p.textContent=text;
+  const b=document.createElement("button"); b.className="btn primary"; b.type="button"; b.textContent="Next";
+  const d=document.createElement("div"); d.className="dots"; d.setAttribute("aria-hidden","true");
+  INTRO_LINES.forEach((_,k)=>{const dot=document.createElement("i"); if(k===i) dot.className="on"; d.appendChild(dot);});
+  s.append(p,b,d); $("#app").appendChild(s);
+  b.addEventListener("click",()=> i<INTRO_LINES.length-1 ? show(introScreens[i+1]) : showProposal());
+  return s;
+});
+
+/* Text reveal for the question: word > character spans */
+function buildQuestion(){
+  const q=$("#q"); let i=0;
+  "Will you be my life partner?".split(" ").forEach((word,wi,arr)=>{
+    const w=document.createElement("span"); w.className="w";
+    [...word].forEach(ch=>{const c=document.createElement("span"); c.className="c"; c.style.setProperty("--i",i++); c.textContent=ch; c.setAttribute("aria-hidden","true"); w.appendChild(c);});
+    q.appendChild(w); if(wi<arr.length-1) q.appendChild(document.createTextNode(" "));
+  });
+  return i;
+}
+const charCount = buildQuestion();
+
+async function showProposal(){
+  show($("#s-ask"));
+  await wait(700);
+  $("#q").classList.add("play");
+  await wait(charCount*55+1700);
+  $("#answers").classList.add("show");
+}
+
+function pop(el){ el.classList.remove("pop"); void el.offsetWidth; el.classList.add("pop"); }
+
+function onNo(){
+  if(finished) return;
+  if(noClicks>=NO_STEPS.messages.length){ return endWithNo(); } /* final NO is always reachable */
+  const step = Math.min(noClicks+1, NO_STEPS.noScale.length-1);
+  const a=$("#answers");
+  a.style.setProperty("--ns",NO_STEPS.noScale[step]);
+  a.style.setProperty("--ys",NO_STEPS.yesScale[step]);
+  $("#noBtn").style.setProperty("--ns",NO_STEPS.noScale[step]);
+  $("#yesBtn").style.setProperty("--ys",NO_STEPS.yesScale[step]);
+  $("#reply").textContent = NO_STEPS.messages[noClicks];
+  pop($("#reply"));
+  noClicks++;
+  saveResponse({answer:"pending",noClicks});
+}
+
+async function onYes(){
+  if(finished) return; finished=true;
+  saveResponse({answer:"yes",noClicks});
+  show($("#s-yes"));
+  burstHearts(18); const stream=setInterval(()=>spawnHeart(),650);
+  const uu=$("#yes2"); [..."uuuuu"].forEach((ch,i)=>{const s=document.createElement("span"); s.style.setProperty("--i",i); s.textContent=ch; s.setAttribute("aria-hidden","true"); uu.appendChild(s);});
+  await wait(1000); $("#yes1").classList.add("in");
+  await wait(2800); $("#yes1").classList.remove("in");
+  await wait(700);  uu.classList.add("in"); uu.classList.add("in");
+  await wait(2800); uu.classList.remove("in");
+  await wait(700);  $("#yes3").classList.add("in"); burstHearts(12);
+  setTimeout(()=>clearInterval(stream),20000);
+}
+
+async function endWithNo(){
+  finished=true;
+  await saveResponse({answer:"no",noClicks:noClicks+1});
+  noClicks++;
+  show($("#s-no"));
+}
+
+/* Floating hearts / particles (capped, self-cleaning) */
+function spawnHeart(){
+  if(reduceMotion) return;
+  const layer=$("#hearts"); if(layer.children.length>28) return;
+  const h=document.createElement("span"); h.className="heart"+(Math.random()>.65?" blue":"");
+  h.textContent="♥"; h.style.left=Math.random()*100+"%"; h.style.fontSize=(14+Math.random()*26)+"px";
+  h.style.animationDuration=(6+Math.random()*5)+"s"; h.style.setProperty("--sway",(Math.random()*80-40)+"px");
+  h.addEventListener("animationend",()=>h.remove()); layer.appendChild(h);
+}
+function burstHearts(n){ for(let i=0;i<n;i++) setTimeout(spawnHeart,i*110); }
+(function particles(){
+  const box=$("#particles"); const n=innerWidth<600?10:18;
+  for(let i=0;i<n;i++){
+    const p=document.createElement("i"); p.className="p"; const s=2+Math.random()*4;
+    p.style.cssText=`left:${Math.random()*100}%;top:${50+Math.random()*50}%;width:${s}px;height:${s}px;animation-duration:${9+Math.random()*10}s;animation-delay:${-Math.random()*12}s`;
+    box.appendChild(p);
+  }
+})();
+
+/* ===== 9. ADMIN DASHBOARD ===== */
+const admin=$("#admin"); let rows=[], filter="all", latestFirst=true, unsub=null;
+function el(tag,cls,text){const e=document.createElement(tag); if(cls) e.className=cls; if(text!=null) e.textContent=text; return e;}
+const fmtTime = t => t ? new Date(t).toLocaleString([], {dateStyle:"medium",timeStyle:"short"}) : "Unknown time";
+const deviceOf = r => `${r.screenWidth||"?"}×${r.screenHeight||"?"}` + (/Mobi|Android|iPhone/i.test(r.userAgent||"")?" · Mobile":" · Desktop");
+
+function renderAdmin(){
+  const yes=rows.filter(r=>r.answer==="yes").length, no=rows.filter(r=>r.answer==="no").length;
+  const answered=yes+no, sorted=[...rows].sort((a,b)=>(b.timestamp||0)-(a.timestamp||0));
+  $("#stTotal").textContent=rows.length; $("#stYes").textContent=yes; $("#stNo").textContent=no;
+  $("#stClicks").textContent=rows.reduce((s,r)=>s+(Number(r.noClicks)||0),0);
+  $("#stLatest").textContent = sorted[0] ? `${String(sorted[0].answer).toUpperCase()} · ${fmtTime(sorted[0].timestamp)}` : "None yet";
+  $("#barY").style.width = answered ? yes/answered*100+"%" : "0"; $("#barN").style.width = answered ? no/answered*100+"%" : "0";
+  const term=$("#admSearch").value.trim().toLowerCase();
+  let view=sorted.filter(r=>(filter==="all"||r.answer===filter) && (!term||[r.sessionId,r.answer,deviceOf(r)].join(" ").toLowerCase().includes(term)));
+  if(!latestFirst) view.reverse();
+  const list=$("#admList"); list.replaceChildren();
+  if(!view.length){ list.appendChild(el("div","empty","No responses match.")); return; }
+  view.forEach(r=>{
+    const row=el("div","row"); const top=el("div");
+    top.append(el("span","tag "+(r.answer||"pending"),String(r.answer||"pending").toUpperCase()), el("strong",null,`${r.noClicks||0} No click${r.noClicks===1?"":"s"}`));
+    row.append(top, el("div",null,fmtTime(r.timestamp)), el("div",null,deviceOf(r)), el("div",null,"Session "+(r.sessionId||"").slice(0,13)));
+    list.appendChild(row);
+  });
+}
+function subscribe(){
+  if(unsub||!db) return;
+  unsub = dbApi.onValue(dbApi.ref(db,"responses"), snap=>{ rows=Object.values(snap.val()||{}); renderAdmin(); },
+    err=>{ rows=[]; renderAdmin(); $("#admList").replaceChildren(el("div","empty","Cannot read responses: "+err.code+". Check database rules / admin sign-in.")); });
+}
+function openAdmin(){
+  admin.classList.add("open"); requestAnimationFrame(()=>admin.classList.add("vis"));
+  $("#app").classList.add("blurred"); subscribe(); renderAdmin(); $("#admClose").focus();
+}
+function closeAdmin(){
+  admin.classList.remove("vis"); $("#app").classList.remove("blurred");
+  setTimeout(()=>admin.classList.remove("open"),500);
+  if(unsub){ unsub(); unsub=null; } /* stop the live listener when hidden */
+}
+async function refreshAdmin(){
+  if(!db) return;
+  try{ const snap=await dbApi.get(dbApi.ref(db,"responses")); rows=Object.values(snap.val()||{}); renderAdmin(); }catch(e){ console.warn(e); }
+}
+
+/* ===== 10. EVENT LISTENERS ===== */
+$("#yesBtn").addEventListener("click",onYes);
+$("#noBtn").addEventListener("click",onNo);
+$("#admClose").addEventListener("click",closeAdmin);
+$("#admRefresh").addEventListener("click",refreshAdmin);
+$("#admSearch").addEventListener("input",renderAdmin);
+$("#admSort").addEventListener("click",e=>{ latestFirst=!latestFirst; e.currentTarget.textContent=latestFirst?"Latest first":"Oldest first"; renderAdmin(); });
+document.querySelectorAll("[data-f]").forEach(b=>b.addEventListener("click",()=>{
+  filter=b.dataset.f; document.querySelectorAll("[data-f]").forEach(x=>x.classList.toggle("on",x===b)); renderAdmin();
+}));
+let lastP=0;
+addEventListener("keydown",e=>{
+  if(e.key==="Escape" && admin.classList.contains("open")) return closeAdmin();
+  if(e.key.toLowerCase()!=="p"||e.repeat||/INPUT|TEXTAREA/.test(document.activeElement.tagName)) return;
+  const now=performance.now();
+  if(now-lastP<500 && !admin.classList.contains("open")){ lastP=0; openAdmin(); } else lastP=now; /* P + P within ~500ms */
+});
+
+/* ===== 11. INITIALIZATION ===== */
+show(introScreens[0]);
+</script>
+</body>
+</html>
